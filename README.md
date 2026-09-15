@@ -307,6 +307,32 @@ Retarget a single motion:
 uv run scripts/smplx_to_robot.py --smplx_file <path_to_smplx_data> --robot <path_to_robot_data> --save_path <path_to_save_robot_data.pkl> --rate_limit
 ```
 
+The default output format is `pkl`. To save an intermediate NPZ file for HybridMimic's motion converter, use:
+
+```bash
+python scripts/smplx_to_robot.py \
+  --smplx_file <path_to_smplx_data> \
+  --robot booster_t1 \
+  --save_path <path_to_save_robot_data.npz> \
+  --save_format npz \
+  --rate_limit
+```
+
+The NPZ file contains `fps`, `root_pos`, `root_rot` (in `xyzw` order), and `dof_pos`. Do not use `--loop` when saving a motion, because the file is written only after the trajectory finishes.
+
+To save a flat CSV file for BeyondMimic's motion converter, use:
+
+```bash
+python scripts/smplx_to_robot.py \
+  --smplx_file <path_to_smplx_data> \
+  --robot unitree_g1 \
+  --save_path <path_to_save_robot_data.csv> \
+  --save_format csv \
+  --rate_limit
+```
+
+Each CSV row contains `root_pos`, `root_rot` (in `xyzw` order), and `dof_pos`. CSV does not store the frame rate, so pass the corresponding value (30 Hz by default) to BeyondMimic with `--input_fps 30`. The original BeyondMimic configuration uses Unitree G1; a CSV retargeted for another robot is not directly compatible with that configuration.
+
 By default you should see the visualization of the retargeted robot motion in a mujoco window.
 If you want to record video, add `--record_video` and `--video_path <your_video_path,mp4>`.
 

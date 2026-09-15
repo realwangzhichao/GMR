@@ -38,7 +38,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save_path",
         default=None,
-        help="Path to save the robot motion.",
+        help="Path to save the robot motion as pkl, npz, or csv.",
+    )
+
+    parser.add_argument(
+        "--save_format",
+        choices=["pkl", "npz", "csv"],
+        default="pkl",
+        help="保存动作数据的格式；默认保持原有的 pkl 格式。",
     )
 
     parser.add_argument(
@@ -146,10 +153,8 @@ if __name__ == "__main__":
             qpos_list.append(qpos)
 
     if args.save_path is not None:
-        import pickle
-
         root_pos = np.array([qpos[:3] for qpos in qpos_list])
-        # save from wxyz to xyzw
+        # GMR 内部使用 wxyz；HybridMimic 的中间动作文件使用 xyzw。
         root_rot = np.array([qpos[3:7][[1, 2, 3, 0]] for qpos in qpos_list])
         dof_pos = np.array([qpos[7:] for qpos in qpos_list])
         local_body_pos = None
@@ -163,8 +168,32 @@ if __name__ == "__main__":
             "local_body_pos": local_body_pos,
             "link_body_list": body_names,
         }
-        with open(args.save_path, "wb") as f:
-            pickle.dump(motion_data, f)
+
+        if args.save_format == "npz":
+            # HybridMimic 的转换脚本只读取下面四个数值字段。
+            np.savez_compressed(
+                args.save_path,
+                fps=aligned_fps,
+                root_pos=root_pos,
+                root_rot=root_rot,
+                dof_pos=dof_pos,
+            )
+        elif args.save_format == "csv":
+            # BeyondMimic 的输入格式为：根位置、xyzw 根姿态、关节位置。
+            motion = np.concatenate([root_pos, root_rot, dof_pos], axis=1).astype(
+                np.float32
+            )
+            np.savetxt(args.save_path, motion, delimiter=",")
+            print(
+                "CSV does not store fps; pass the target sampling rate to the "
+                "downstream --input_fps option (30 by default)."
+            )
+        else:
+            # 保留 GMR 原有的 PKL 输出及其全部字段。
+            import pickle
+
+            with open(args.save_path, "wb") as f:
+                pickle.dump(motion_data, f)
         print(f"Saved to {args.save_path}")
 
     robot_motion_viewer.close()
