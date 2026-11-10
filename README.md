@@ -30,6 +30,21 @@
 
 This repo is licensed under the [MIT License](LICENSE).
 
+## Local LAFAN1 support: X2 Ultra and T2
+
+X2 Ultra and T2 use the existing GMR BVH entry points. For example:
+
+```bash
+conda activate gmr
+python scripts/bvh_to_robot_dataset.py \
+  --src_folder ../human_data/lafan1 \
+  --tgt_folder ../human_data/lafan1_morphmimic/my_batch/pkl/x2/lafan1 \
+  --robot agibot_x2_ultra
+```
+
+Use `--robot booster_t2` for T2 and `--robot unitree_g1` for G1, with separate
+output folders. The native batch script uses CUDA for forward kinematics.
+See [parameters, usage and checks](docs/LAFAN_CONFIGS.md).
 
 # News & Updates
 - **2026-01-21:** GMR now supports [Xsens](https://www.xsens.com/) BVH offline data.
